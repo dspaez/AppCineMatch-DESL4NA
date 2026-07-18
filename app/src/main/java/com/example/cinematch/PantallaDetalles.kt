@@ -4,6 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -17,7 +22,19 @@ import coil.compose.AsyncImage
 
 @Composable
 fun PantallaDetalles(navController: NavController, viewModel: PeliculaViewModel, peliculaId: Int) {
-    val pelicula = viewModel.obtenerPeliculaPorId(peliculaId)
+
+    //Variable de estado para almacenar la película obtenida por ID nos devuelve la BD
+    var peliculaState by remember { mutableStateOf<Pelicula?>(null) }
+
+    //Efecto que se lanza cuando cambia el ID de la película
+    LaunchedEffect(peliculaId) {
+        peliculaState = viewModel.obtenerPeliculaPorId(peliculaId)
+    }
+
+    // Variable para almacenar la película obtenida por ID
+    //Smart cast: Si peliculaState no es nulo, se asigna a pelicula, de lo contrario, pelicula será nulo
+    val pelicula = peliculaState
+
 
     if (pelicula != null) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -65,7 +82,7 @@ fun PantallaDetalles(navController: NavController, viewModel: PeliculaViewModel,
             ) {
                 Text(text = pelicula.titulo, fontSize = 36.sp, fontWeight = FontWeight.ExtraBold)
                 Text(
-                    text = "${pelicula.año} • Dirigida por ${pelicula.director}",
+                    text = "${pelicula.anio} • Dirigida por ${pelicula.director}",
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -86,6 +103,11 @@ fun PantallaDetalles(navController: NavController, viewModel: PeliculaViewModel,
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
+        }
+    }else {
+        // Pantalla de Carga
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
     }
 }

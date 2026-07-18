@@ -2,27 +2,50 @@ package com.example.cinematch
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class PeliculaViewModel : ViewModel() {
+class PeliculaViewModel(private val dao: PeliculaDao): ViewModel() {
 
-    // 1. Lista privada: mutableStateListOf avisa a Compose cuando hay cambios
-    private val _peliculas = mutableStateListOf(
-        Pelicula(1, "Inception", "Christopher Nolan", 2010, "Un ladrón que roba secretos corporativos a través del uso de la tecnología de compartir sueños.", 8.8, "https://www.themoviedb.org/t/p/w600_and_h900_face/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg"),
-        Pelicula(2, "Interstellar", "Christopher Nolan", 2014, "Un equipo de exploradores viaja a través de un agujero de gusano en el espacio en un intento por asegurar la supervivencia de la humanidad.", 8.6, "https://www.themoviedb.org/t/p/w600_and_h900_face/iawqQdFKI7yTUoSkDNP8gyV3J3r.jpg"),
-        Pelicula(3, "The Matrix", "Wachowskis", 1999, "Un hacker informático descubre la verdadera y chocante naturaleza de su realidad y su papel en la guerra contra sus controladores.", 8.7, "https://www.themoviedb.org/t/p/w600_and_h900_face/aOIuZAjPaRIE6CMzbazvcHuHXDc.jpg"),
-        Pelicula(4, "El Padrino", "Francis Ford Coppola", 1972, "El envejecido patriarca de una dinastía del crimen organizado transfiere el control de su imperio clandestino a su reacio hijo.", 9.2, "https://www.themoviedb.org/t/p/w600_and_h900_face/3bhkrj58Vtu7enYsRolD1fZdja1.jpg")
-    )
+    //Transformar el Flow de Room en un stateFlow para que Compose pueda observarlo
+// y redibujar la UI cuando cambie
 
+    val peliculas: StateFlow<List<Pelicula>> = dao.obtenerTodasLasPeliculas()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000), // Mantener la suscripción mientras haya observadores, con un retraso de 5 segundos
+            initialValue = emptyList()
+        )
 
+    //Función para insertar una película en la base de datos (Usamos corutinas para no bloquear el hilo principal)
+    fun insertarPelicula(pelicula: Pelicula) {
+        viewModelScope.launch {
+            dao.insertarPelicula(pelicula)
+        }
+    }
 
-
-
-    // 2. Lista pública (solo lectura) expuesta a la Interfaz Gráfica
-    val peliculas: List<Pelicula> = _peliculas
-
-    // 3. Función auxiliar para buscar una película cuando vayamos a los Detalles
-    fun obtenerPeliculaPorId(id: Int): Pelicula? {
-        // 'find' busca en la lista el primer elemento que cumpla la condición
-        return _peliculas.find { it.id == id }
+    //Funcion para obtener una película por su ID (Usamos corutinas para no bloquear el hilo principal)
+    suspend fun obtenerPeliculaPorId(id: Int): Pelicula? {
+        return dao.obtenerPeliculaPorId(id)
     }
 }
+
+
+//La Fabrica se encarga de construir el ViewModel y pasarle el DAO como dependencia.
+// Esto es útil para la inyección de dependencias y para mantener el código
+// limpio y modular.
+class PeliculaViewModelFactory(private val dao: PeliculaDao): ViewModelProvider.Factory{
+
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(PeliculaViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return PeliculaViewModel(dao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+

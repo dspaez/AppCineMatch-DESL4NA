@@ -12,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -41,8 +42,17 @@ fun CineMatchApp() {
     // 1. Creamos el motor de navegación
     val navController = rememberNavController()
 
-    // 2. Instanciamos nuestro "Cerebro". Este ViewModel se compartirá entre pantallas.
-    val peliculaViewModel: PeliculaViewModel = viewModel()
+    //Obtener el contexto actual de la app
+    val context = LocalContext.current
+
+    //Construir la base de datos y sacamos DAO
+    val database = PeliculaDatabase.getDatabase(context)
+    val dao = database.peliculaDao()
+
+    // Creamos el ViewModel con la fábrica que le pasamos el DAO
+    val peliculaViewModel: PeliculaViewModel = viewModel(
+        factory = PeliculaViewModelFactory(dao)
+    )
 
     // 3. Definimos el mapa y decimos que inicie en "catalogo"
     NavHost(navController = navController, startDestination = "catalogo") {
@@ -50,6 +60,11 @@ fun CineMatchApp() {
         // --- RUTA 1: El Catálogo ---
         composable("catalogo") {
             PantallaCatalogo(navController = navController, viewModel = peliculaViewModel)
+        }
+
+        // --- RUTA 3: Ajustes ---
+        composable("ajustes") {
+            PantallaAjustes(navController = navController)
         }
 
         // --- RUTA 2: Los Detalles (Espera un parámetro llamado {id}) ---

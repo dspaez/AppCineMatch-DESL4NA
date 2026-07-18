@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -59,5 +61,17 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    implementation("androidx.compose.material:material-icons-extended")
+
+
+
+    // Configuración de Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+
+    implementation(libs.androidx.datastore.preferences)
 
 }
