@@ -67,6 +67,11 @@ fun CineMatchApp() {
             PantallaAjustes(navController = navController)
         }
 
+        // --- RUTA 4: La Cartelera ---
+        composable("cartelera") {
+            PantallaCartelera(navController = navController, viewModel = peliculaViewModel)
+        }
+
         // --- RUTA 2: Los Detalles (Espera un parámetro llamado {id}) ---
         composable("detalles/{id}") { backStackEntry ->
             // Recuperamos el parámetro de la ruta (siempre llega como texto/String)

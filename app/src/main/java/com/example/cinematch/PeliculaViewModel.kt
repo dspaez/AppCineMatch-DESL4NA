@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -32,6 +33,25 @@ class PeliculaViewModel(private val dao: PeliculaDao): ViewModel() {
     suspend fun obtenerPeliculaPorId(id: Int): Pelicula? {
         return dao.obtenerPeliculaPorId(id)
     }
+
+    //Lista de películas obtenidas de la API (no de la base de datos)
+    private val _peliculasInternet = MutableStateFlow<List<PeliculaRed>>(emptyList())
+    val pelicuasInternet: StateFlow<List<PeliculaRed>> = _peliculasInternet
+
+    private val tmdbApiKey = "314b3545dc7f5ee49f8ec249415cc82e"
+
+    fun descargarCarteleraPopular(){
+        viewModelScope.launch {
+            try {
+                val respuesta = RetrofitClient.api.obtenerPeliculasPopulares(apiKey = tmdbApiKey)
+                _peliculasInternet.value = respuesta.resultados
+
+            }catch (e: Exception) {
+                android.util.Log.e("CineMatch", "Error al descargar cartelera: ${e.message}")
+            }
+        }
+    }
+
 }
 
 

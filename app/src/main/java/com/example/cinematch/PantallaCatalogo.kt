@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -52,6 +53,11 @@ fun PantallaCatalogo(navController: NavController, viewModel: PeliculaViewModel)
 
                 // Agregamos un botón de ajustes en la barra superior
                 actions = {
+
+                    IconButton(onClick = { navController.navigate("cartelera") }) {
+                        Icon(Icons.Default.Movie, contentDescription = "Cartelera")
+                    }
+
                     IconButton(onClick = { navController.navigate("ajustes") }) {
                         Icon(Icons.Default.Settings, contentDescription = "Ajustes")
                     }

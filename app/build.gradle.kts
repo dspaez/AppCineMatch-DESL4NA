@@ -74,4 +74,7 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(libs.squareup.retrofit)
+    implementation(libs.squareup.converter.gson)
+
 }
