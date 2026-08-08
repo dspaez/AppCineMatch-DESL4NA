@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,10 +49,13 @@ fun CineMatchApp() {
     //Construir la base de datos y sacamos DAO
     val database = PeliculaDatabase.getDatabase(context)
     val dao = database.peliculaDao()
+    val api = RetrofitClient.api
+
+    val repositorio = remember{ PeliculaRepository(dao, api) }
 
     // Creamos el ViewModel con la fábrica que le pasamos el DAO
     val peliculaViewModel: PeliculaViewModel = viewModel(
-        factory = PeliculaViewModelFactory(dao)
+        factory = PeliculaViewModelFactory(repositorio)
     )
 
     // 3. Definimos el mapa y decimos que inicie en "catalogo"

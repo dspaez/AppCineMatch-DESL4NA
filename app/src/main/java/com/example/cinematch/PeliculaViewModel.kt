@@ -10,12 +10,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class PeliculaViewModel(private val dao: PeliculaDao): ViewModel() {
+class PeliculaViewModel(private val repository: PeliculaRepository): ViewModel() {
 
     //Transformar el Flow de Room en un stateFlow para que Compose pueda observarlo
 // y redibujar la UI cuando cambie
 
-    val peliculas: StateFlow<List<Pelicula>> = dao.obtenerTodasLasPeliculas()
+    val peliculas: StateFlow<List<Pelicula>> = repository.peliculasLocales
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000), // Mantener la suscripción mientras haya observadores, con un retraso de 5 segundos
@@ -25,13 +25,13 @@ class PeliculaViewModel(private val dao: PeliculaDao): ViewModel() {
     //Función para insertar una película en la base de datos (Usamos corutinas para no bloquear el hilo principal)
     fun insertarPelicula(pelicula: Pelicula) {
         viewModelScope.launch {
-            dao.insertarPelicula(pelicula)
+            repository.insertarPeliculaLocal(pelicula)
         }
     }
 
     //Funcion para obtener una película por su ID (Usamos corutinas para no bloquear el hilo principal)
     suspend fun obtenerPeliculaPorId(id: Int): Pelicula? {
-        return dao.obtenerPeliculaPorId(id)
+        return repository.obtenerPeliculaLocalPorId(id)
     }
 
     //Lista de películas obtenidas de la API (no de la base de datos)
@@ -42,12 +42,9 @@ class PeliculaViewModel(private val dao: PeliculaDao): ViewModel() {
 
     fun descargarCarteleraPopular(){
         viewModelScope.launch {
-            try {
-                val respuesta = RetrofitClient.api.obtenerPeliculasPopulares(apiKey = tmdbApiKey)
-                _peliculasInternet.value = respuesta.resultados
-
-            }catch (e: Exception) {
-                android.util.Log.e("CineMatch", "Error al descargar cartelera: ${e.message}")
+            val lista = repository.obtenerCarleteraPopular(tmdbApiKey)
+            if(lista.isNotEmpty()) {
+                _peliculasInternet.value = lista
             }
         }
     }
@@ -58,12 +55,12 @@ class PeliculaViewModel(private val dao: PeliculaDao): ViewModel() {
 //La Fabrica se encarga de construir el ViewModel y pasarle el DAO como dependencia.
 // Esto es útil para la inyección de dependencias y para mantener el código
 // limpio y modular.
-class PeliculaViewModelFactory(private val dao: PeliculaDao): ViewModelProvider.Factory{
+class PeliculaViewModelFactory(private val repository: PeliculaRepository): ViewModelProvider.Factory{
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(PeliculaViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return PeliculaViewModel(dao) as T
+            return PeliculaViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

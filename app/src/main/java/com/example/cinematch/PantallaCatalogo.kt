@@ -67,7 +67,7 @@ fun PantallaCatalogo(navController: NavController, viewModel: PeliculaViewModel)
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    // Al hacer clic, insertamos una película de prueba en la BD
+                        // Al hacer clic, insertamos una película de prueba en la BD
                     val nuevaPelicula = Pelicula(
                         titulo = "Spider-Man",
                         director = "Sam Raimi",
